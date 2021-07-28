@@ -19,8 +19,8 @@ resource "aws_s3_bucket_object" "secret_file" {
 
 # user for the lambda function
 resource "aws_iam_user" "lambda_user" {
-  name = "lambda-${random_id.id.hex}"
-	force_destroy = "true"
+  name          = "lambda-${random_id.id.hex}"
+  force_destroy = "true"
 }
 
 resource "aws_iam_access_key" "lambda-keys" {
@@ -70,8 +70,6 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -90,24 +88,24 @@ EOF
 }
 
 resource "aws_lambda_function" "lambda" {
-	function_name = "function-${random_id.id.hex}"
+  function_name    = "function-${random_id.id.hex}"
   filename         = data.archive_file.lambda_zip_inline.output_path
   source_code_hash = data.archive_file.lambda_zip_inline.output_base64sha256
-	handler = "main.handler"
-  runtime = "nodejs14.x"
-  role          = aws_iam_role.iam_for_lambda.arn
+  handler          = "main.handler"
+  runtime          = "nodejs14.x"
+  role             = aws_iam_role.iam_for_lambda.arn
   environment {
     variables = {
       BUCKET = aws_s3_bucket.protected_bucket.bucket
-			KEY = aws_s3_bucket_object.secret_file.id
+      KEY    = aws_s3_bucket_object.secret_file.id
     }
   }
 }
 
 # tester user
 resource "aws_iam_user" "user" {
-  name = "user-${random_id.id.hex}"
-	force_destroy = "true"
+  name          = "user-${random_id.id.hex}"
+  force_destroy = "true"
 }
 
 resource "aws_iam_access_key" "user-keys" {
@@ -144,13 +142,13 @@ output "bucket" {
 }
 
 output "secret" {
-	value = aws_s3_bucket_object.secret_file.id
+  value = aws_s3_bucket_object.secret_file.id
 }
 
 output "access_key_id" {
-	value = aws_iam_access_key.user-keys.id
+  value = aws_iam_access_key.user-keys.id
 }
 output "secret_access_key" {
-	value = aws_iam_access_key.user-keys.secret
-	sensitive = true
+  value     = aws_iam_access_key.user-keys.secret
+  sensitive = true
 }
